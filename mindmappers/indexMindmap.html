@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dropbox MindMap</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link rel="stylesheet" href="styles.css"  type="text/css"/>
+  
+<!--   <link href="css/ui-lightness/jquery-ui-1.10.3.custom.css" rel="stylesheet"> -->
+  
+  
+</head>
+
+<body>
+
+	<script>console.log("body execution start");</script>
+<!--   <h3 style="display:none;">FPS: <span id="fps">0</span></h3> -->
+  <!-- <h1>Buzzmap</h1> -->
+  <!-- <a id="download" href="https://github.com/marcelklehr/buzzmap/zipball/master">Download <i>2.0.3</i></a> -->
+  <ul id="instr">
+    <!--<li>Sort the nodes by dragging them around.</li>
+    	<li>Click on a node to display it's children. Click again to hide them.</li>
+    	<li>Doubleclick to edit a node.<br/><i>(Press Enter to submit, Esc to cancel editing. [+] will add a new child node; [x] will delete the node)</i></li>
+  -->	
+  </ul>
+<!--   <a href="http://github.com/marcelklehr/buzzmap" target="_blank" id="fork"><img style="position: absolute; top: 0pt; right: 0pt; border: 0pt none; z-index:10000;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub"></a>
+ -->  <div id="msg"></div>
+ 
+   <!-- <ul id="structure">
+    <li><div><span>MindMap</span></div>
+
+      <ul id="mindmap"> 		
+	 </ul>
+        
+    </li>
+  </ul>  -->
+		      
+  
+  <div id="container"></div>
+
+  
+<style type="text/css">
+   
+  BODY {
+    color:#fff;
+    font-family: serif;
+  }
+  h1 {
+    margin-top:0;
+    margin-right: 20px;
+    float:left;
+  }
+  a#download {
+    display: block;
+    padding-top: 0.7em;
+    color: #fff;
+    position:relative;
+    z-index:2;
+  }
+  h3 {
+    float: right;
+    margin-right: 130px;
+  }
+  #instr {
+    clear:left;
+    padding-left:1em;
+  }
+  #container {
+    position:fixed;
+    top:0;
+    width:100%;
+    height:100%;
+    z-index:1;
+  }
+  
+ 
+  </style>
+
+
+  <script> console.log("body execution end"); </script>
+  <!-- Raphael, for SVG support -->
+  <script src="raphael.min.js" type="text/javascript"></script>
+
+  <!-- jQuery, of course! -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js" type="text/javascript"></script>
+  
+  <!-- jQuery UI, for the draggable nodes... -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js" type="text/javascript"></script>
+
+  <!-- <script src="tooltip.js" type="text/javascript"></script> -->
+
+	<!-- Buzzmap, come on?! -->
+  <script src="buzzmap.min.js" type="text/javascript"></script>   
+  
+  <!-- SCRIPT FOR DROPBOX -->
+  <script src="//cdnjs.cloudflare.com/ajax/libs/dropbox.js/0.9.1/dropbox.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.5/require.min.js"></script>
+  <script src="//googledrive.com/host/0B147HlW6g510cDdfeFJWM1MwTHM/6.0/ItemMirror.min.js"></script> 
+  
+ <!--  <script src="js/jquery-ui-1.10.3.custom.js"></script> -->
+    
+  <script type="text/javascript">
+    
+    
+   var buzzmap;
+  $(document).ready(function ()  {
+	
+/* 	  $( document ).tooltip(); 
+ */	  
+	function createBuzzmap() {
+    // Retrieving previous session
+    //(localStorage)
+    //  var cache = localStorage.getItem('buzzmap');
+    
+    // Init buzzmap
+    buzzmap = $('#container').buzzmap({
+      structure: '#structure', // load last session, otherwise load data from DOM: $('#structure')
+      editable: true, // enable edit mode
+      onchange: function(node, data){  // if map is changed, save to localStorage
+        if(localStorage)
+          localStorage.setItem('buzzmap', data);
+      },
+    });
+    
+    // Register callback for frame rate
+    buzzmap.bind('fps', function(fps) {
+        $('#fps').text(fps);
+    });
+    
+    // Do other necessary things...
+    $('h3').show();
+    $('#structure li').hide();
+ 
+	}
+	
+
+
+		console.log("dropbox code execution start");
+	 	
+		var associationNames = new Array();
+		
+		function folder(folderName, folderChildren, type){
+			
+			   // Add object properties like this
+			   this.folderName = folderName;
+			   this.folderChildren = [];
+			   this.type = type;
+		}
+	
+		var dropboxFolder = new Array();
+		
+		dropboxConnection(showAssociation);
+		
+		function dropboxConnection(callback)
+		{
+			
+		require(["ItemMirror"], function(ItemMirror){
+			 "use strict";
+		var
+		      i,
+		      f2,
+			  dropboxClient,
+		      dropboxXooMLUtility,
+		      dropboxItemUtility,
+		      mirrorSyncUtility,
+		      URIToGroupingItem,
+		      itemMirrorOptions,
+		      createAssociationCase1Options,
+		      createAssociationCase2Options,
+		      createAssociationCase7Options,
+		      itemMirrors;
+		    
+			i=0;
+		       
+		     dropboxClient = new Dropbox.Client({
+		      //key:     "YTKSGBUodHA=|Pm0x0m5s+2lDR4d8ekUb4jmeNE+cQDNpeLo2uT09LA==",
+		      key: "I5bzV3GCAYA=|aG1QByPTEYm0yGw7YhGQJXDRuClbj6fv5tRKWXfwJA==", // full dropbox
+		      //key : "aaQWCQSVcxA=|DRJXtH9WH1bxz0sNVssBV5IfgPfYpQlVMLqcee9z1g==", //yan
+		      sandbox: false
+		    });
+		    dropboxClient.authDriver(new Dropbox.Drivers.Redirect({
+		      rememberUser: true
+		    }));
+		    dropboxXooMLUtility = {
+		      utilityURI: "DropboxXooMLUtility",
+		      dropboxClient: dropboxClient
+		    };
+		    dropboxItemUtility = {
+		      utilityURI: "DropboxItemUtility",
+		      dropboxClient: dropboxClient
+		    };
+		    mirrorSyncUtility = {
+		      utilityURI: "MirrorSyncUtility"
+		    };
+		    
+			URIToGroupingItem = "/DayWeaver Independent Studies/OurSpace/";
+		    
+		    itemMirrorOptions = {
+		      1: {
+		        groupingItemURI: URIToGroupingItem,
+		        xooMLUtility: dropboxXooMLUtility,
+		        itemUtility: dropboxItemUtility
+		      },
+		      2: {
+		        groupingItemURI: URIToGroupingItem,
+		        xooMLUtility: dropboxXooMLUtility,
+		        itemUtility: dropboxItemUtility,
+		        syncUtility: mirrorSyncUtility,
+		        createIfDoesNotExist: false
+		      },
+		      3: {
+		        groupingItemURI: URIToGroupingItem,
+		        xooMLUtility: dropboxXooMLUtility,
+		        itemUtility: dropboxItemUtility,
+		        syncUtility: mirrorSyncUtility,
+		        createIfDoesNotExist: true
+		      }
+		    };
+		    createAssociationCase1Options = {
+		      displayText: "case1"
+		    };
+		    createAssociationCase2Options = {
+		      "displayText": "case2",
+		      "itemURI": "http://ischool.uw.edu/about"
+		    };
+		    createAssociationCase7Options = {
+		      "displayText": "case7",
+		      "itemName": "case7",
+		      "isGroupingItem": true
+		    };
+
+		    function constructNewItemMirror() {
+		      // Construct new ItemMirror in Case 3, could choose other cases
+		      new ItemMirror(itemMirrorOptions[3], function (error, itemMirror) {
+		        if (error) { throw error; }
+		        //alertSchemaVersion(itemMirror);
+		        findChildren(itemMirror);
+		        
+		        //createAssociation(itemMirror, createAssociationCase1Options); // Try swapping out other cases!
+		        //createAssociation(itemMirror, createAssociationCase2Options);
+		        //createAssociation(itemMirror, createAssociationCase7Options);
+		        
+		      });
+		    } 
+		    
+		    var loopArray = function(arr,itemMirror, callback) {
+        	    itemMirror.getAssociationDisplayText(arr[i],function(error, displayText){
+        	    //do_some_thing() start;
+        	    	if (error) {
+	    		          throw error;
+	    		        }
+        	    		
+        	    	  	    		
+        	    		console.log("inside looparray function");
+        	    		console.log("displaytext for "+i+displayText);
+	    		        associationNames[i] = displayText;
+	    		        f2 = new folder();
+	    		       	f2.folderName = displayText;
+	    		        console.log("f2.folderName is "+f2.folderName);
+
+	    		        var mynewguids = new Array();
+	    		        console.log("new mynewguids created");
+	    		        
+	    		        if(displayText.indexOf('www')!=-1)
+	    		        	{
+	    		        		console.log("it is url");
+	    		        		dropboxFolder.push(f2);
+	    		        		i++;
+			    				if(i < arr.length)
+			    				{	
+			    				loopArray(arr,itemMirror,callback);   
+			    				}
+			    				else
+			    				{
+			        	        	return callback();
+
+			    				}
+	    		        	}
+	    		        else
+	    		        	{
+	    		             itemMirror.isAssociatedItemGrouping(arr[i], function(error, flag){
+	       		    		 if (error) {
+	   		    	          throw error;
+	   		    	        }
+	       		    		 if(!flag)
+	       		    			 {
+	       		    				console.log("it is not grouping item");
+	       		    				itemMirror.getAssociationAssociatedItem(arr[i],function(error,associatedItem){
+	       		    					if (error) {
+	       		   		    	          throw error;
+	       		   		    	        }			
+	       		    				console.log("associatedItem is "+associatedItem);
+	       		    				if(associatedItem==null)
+	       		    					{
+	       		    					console.log("no associatedItem"+associatedItem);
+	       		    					f2.type="case1";
+	       		    					}
+	       		    				else
+	       		    					{
+	       		    					console.log("there is associatedItem"+associatedItem);
+	       		    					f2.folderName=f2.folderName+associatedItem;
+	       		    					f2.type="case2";
+	       		    					}
+	       		    				dropboxFolder.push(f2);
+			    					i++;
+				    				if(i < arr.length)
+				    				{	
+				    				loopArray(arr,itemMirror,callback);   
+				    				}
+				    				else
+				    				{
+				        	        	return callback();
+	
+				    				}
+	       		    			 }); //  getAssociationAssociatedItem ends
+	       		    			 }	
+	       		    			 else
+	       		    			 {
+	       		    				 console.log("it is grouping item");
+	       		    				  f2.type="case7";	 
+
+	    		        //child finding start
+	    		        itemMirror.createItemMirrorFromAssociatedGroupingItem(
+	    		        		arr[i], function (error, newItemMirror) {
+	    		                if (error) { throw error; }
+			    		        console.log("execution started to create child itemmirror");
+								//flag=true;
+	    		                newItemMirror.listAssociations(function (error, newguids){
+	    				    		 if (error) {
+	    				    	          throw error;
+	    				    	        }
+	    				    		console.log("new guids length for.."+f2.folderName+"..."+newguids.length);	     
+	    				    		mynewguids = newguids;
+	    				    		
+	    				    		if(mynewguids.length>0)
+	    				    		{
+	    		                	console.log("mynewguids.length ..."+mynewguids.length);
+	    				    		for(var j=0;j<mynewguids.length;j++)
+	    				    			{
+	    				    				newItemMirror.getAssociationDisplayText(mynewguids[j], function (error, newdisplayText)  {
+	    				    								    					
+	    				    				if (error) {
+	    				    		          throw error;
+	    				    		        }
+	    				    		        f2.folderChildren[j] = newdisplayText;
+	    				    		        console.log("child of.."+f2.folderName+"..."+newdisplayText);
+	    				    		        
+	    				    		        // set x to next item
+	    				        	        //dropboxFolder.push(f2);
+	    				        	        //i++;
+
+	    				        	        // any more items in array? continue loop
+	    				        	        if(i < arr.length-1 && j == mynewguids.length-1) {
+	    				        	        	dropboxFolder.push(f2);
+	    				        	        	i++;
+	    				        	            loopArray(arr,itemMirror,callback);   
+	    				        	        } else if( j == mynewguids.length-1 ) {
+	    				        	        	dropboxFolder.push(f2);
+	    				        	        	console.log("total number of folders ---"+dropboxFolder.length);
+	    				        	        	return callback();
+	    				        	        	
+	    				        	        } 
+	    				    				});
+	    				    			}
+	    				    			
+	    				    		  }
+	    				    		else
+	    				    			{
+	    				    				dropboxFolder.push(f2);
+	    				    				i++;
+	    				    				if(i < arr.length)
+	    				    				{	
+	    				    				loopArray(arr,itemMirror,callback);   
+	    				    				}
+	    				    				else
+	    				    				{
+	    				        	        	return callback();
+
+	    				    				}
+
+	    				    			}
+	    		                	});
+	    		        	
+	    						
+        	    	//do same thing over
+        	   
+        	        
+	    		    });// child finding ends
+	    		        
+	       		    			}
+	       	    		}); // isAssociatedItemGrouping ends
+        	    	}
+        	    }); 
+        	}
+		    
+		    
+		    function findChildren(itemMirror)
+		    {
+		    	console.log("inside findChildren");
+		    	var myguids = new Array();
+		    	itemMirror.listAssociations(function (error, guids){
+		    		 if (error) {
+		    	          throw error;
+		    	        }
+		         	console.log("in listAssociation");
+		    		console.log(guids.length);
+					myguids=guids;
+		
+				console.log("level 1 guids length"+myguids.length);
+				//var f2;
+				    if(myguids.length>0)
+		    		{
+		        	console.log("in first if block");
+		        	loopArray(myguids,itemMirror,  callback);
+		        	}
+				    else
+				    {
+				    showAssociation();
+				    }
+				   
+		    		});
+		    		
+		   	}
+		        
+		    function createAssociation(itemMirror, options) {
+		      itemMirror.createAssociation(options, function (error, GUID) {
+		        if (error) {
+		          throw error;
+		        }
+
+		        getDisplayTextForAssociation(itemMirror, GUID);
+		        upgradeAssociation(itemMirror, GUID);
+		      });
+		    }
+
+		    function getDisplayTextForAssociation(itemMirror, GUID) {
+		      itemMirror.getAssociationDisplayText(GUID, function (error, displayText) {
+		        if (error) {
+		          throw error;
+		        }
+
+		        // do something with displayText
+		      });
+		    }
+
+		    function upgradeAssociation(itemMirror, GUID) {
+		      itemMirror.upgradeAssociation(GUID, function (error) {
+		        if (error) {
+		          throw error; // You might get a "404" error thrown here if "case1" already exists
+		                       // that's because upgrades only work if a grouping item doesn't already exist!
+		        } else {
+		          alert("upgrade complete!");
+		        }
+		        // Now "case1" should exist as a folder, try creating an ItemMirror for it.
+		      });
+		    }
+
+		    function alertSchemaVersion(itemMirror) {
+		      // Most "get" methods follow this pattern. Check documentation to be sure.
+		      itemMirror.getSchemaVersion(function (error, schemaVersion) {
+		        if (error) { throw error; }
+
+		        //alert(schemaVersion);
+		        // do something with schemaVersion
+		      });
+		    }
+
+		    dropboxClient.authenticate(function (error, client) {
+		      if (error) {
+		        throw error;
+		      }
+		      constructNewItemMirror();
+		      
+		    });
+		 });
+		}
+
+		function showAssociation()
+		{
+		    console.log("outside length is.."+dropboxFolder.length);
+		    var ul = document.createElement("ul");
+	   		var ul1 = document.createElement("ul");
+
+	   		var div = document.createElement("div");
+	   		var div1 = document.createElement("div");
+
+	   		var li = document.createElement("li");    
+	   		var div = document.createElement("div");    
+	   		var span = document.createElement("span");    
+		 	
+	   		document.getElementsByTagName("body")[0].appendChild(div);
+			div.appendChild(ul);
+			ul.appendChild(li);
+			li.appendChild(div1);
+			div1.appendChild(span);
+			span.setAttribute("title","Double click to edit the node");
+			span.innerHTML="OurSpace";
+			li.appendChild(ul1);
+			
+		 	for (var i=1;i<=2;i++)
+		 		{
+		 		if(i==1)
+		 			{
+		 		document.getElementsByTagName("ul")[i].setAttribute('id',"structure");
+		 			}
+		 		if (i==2)
+		 			{
+		 			document.getElementsByTagName("ul")[i].setAttribute('id',"mindmap");
+		 			}
+		 		
+		 		}
+		      
+			   for(var i=0;i<dropboxFolder.length;i++)
+	   			{
+			   		var li = document.createElement("li");   
+			   		li.setAttribute("id",dropboxFolder[i].folderName);
+	   				//li.innerHTML="<div><span>"+associationNames[i]+"</span></div>";
+	   				console.log("imp information");
+	   				console.log("for iteration"+i+"  "+dropboxFolder[i].folderName);
+	   				console.log(dropboxFolder[i].folderChildren.length);
+	   				if(dropboxFolder[i].folderChildren.length>0)
+	   					{
+	   					//li.style.background="yellow";
+	   					//console.log(li.style.background)
+	   			   		li.setAttribute("class","node7");
+
+	   					li.innerHTML="<div><span title='Double click to edit the node'>"+dropboxFolder[i].folderName+"</span></div>";
+
+	   					//li.setAttribute("style",".buzzmap .node { background:yellow } ");
+						//li.style.cssText = ".buzzmap .node { background:yellow }";
+	   					console.log("case 7");
+	   					}
+	   				else
+	   					{
+	   					if(dropboxFolder[i].type=="case7")
+   						{
+   							console.log("case 7");
+   							//li.style.background="yellow";
+   							li.setAttribute("style",".node .buzzmap { background:yellow }");
+   						}
+	   					else if(dropboxFolder[i].type=="case1")
+	   						{
+	   						console.log("case 1");
+	   						//li.style.background="white";
+	   						li.setAttribute("style",".node .buzzmap { background:white }");
+	   						}
+	   					else if(dropboxFolder[i].type=="case2")
+	   						{
+   							console.log("case 2");
+   							li.setAttribute("style",".node .buzzmap { background:blue } ");
+	   						//li.style.background="blue";
+	   						}
+	   					li.innerHTML="<div><span title='Double click to edit the node'>"+dropboxFolder[i].folderName+"</span></div>";
+	   					
+	   					}
+	   				//li.innerHTML="<div><span>"+dropboxFolder[i].folderName+"</span></div>";
+	   				document.getElementById("mindmap").appendChild(li);  	
+	   				if(dropboxFolder[i].folderChildren.length>0)
+	   					{
+	   						console.log("Child for"+dropboxFolder[i].folderName+" present loggin from showAssociation");
+	   				   		for(var j=0;j<dropboxFolder[i].folderChildren.length;j++)
+	   						{
+	   				   			console.log("iteration inside--"+dropboxFolder[i].folderChildren[j]);
+	   				   			
+	   				   			if(dropboxFolder[i].type=="case1")
+	   							{
+		   							console.log("casev 1");
+		   							li.setAttribute("style",".node .buzzmap { background:white }");
+	   				   				//li.style.background="white";
+
+	   							}
+	   							else if(dropboxFolder[i].type=="case2")
+	   							{
+		   							console.log("casev 2");
+		   							li.setAttribute("style",".node .buzzmap { background:blue }");		
+	   								//li.style.background="blue";
+	   						
+	   							} 
+	   							else if(dropboxFolder[i].type=="case7")
+	   							{
+		   							console.log("casev 7");
+		   							li.setAttribute("style",".node .buzzmap { background:yellow } ");
+	   								//li.style.background="yello";
+
+	   							}
+	   				   			var ul2 = document.createElement("ul");
+	   						     
+	   				   			ul2.innerHTML="<li><div><span title='Double click to edit the node'>"+dropboxFolder[i].folderChildren[j]+"</li></div></span>";
+	   			   				document.getElementById(dropboxFolder[i].folderName).appendChild(ul2);  	
+
+	   						}
+
+	   					}
+	   			}
+		//		newfunction();
+		   console.log("dropbox code execution end");
+		   createBuzzmap();
+	 	}
+
+	   		
+  }); 			
+		</script>
+</body>
+</html>

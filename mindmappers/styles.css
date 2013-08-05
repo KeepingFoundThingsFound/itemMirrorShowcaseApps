@@ -1,0 +1,66 @@
+body {
+  background-image:url('bg8.jpg');
+  /* background-color: #B40404;  */
+  background-size: 100%;
+}
+.buzzmap .node {
+  z-index: 100;
+  cursor: default;
+  display: block;
+  
+  background:#FF8000;
+  opacity:0.9;
+  color:black;
+  font: 30px/34px Arial, sans-serif;
+  font-size:1em;
+  text-align: center;
+  
+  padding:0 7px;
+  border: 2px solid #F5DA81;
+  -webkit-border-top-left-radius: 20px;
+  -webkit-border-bottom-right-radius: 20px;
+  -moz-border-radius-topleft: 20px;
+  -moz-border-radius-bottomright: 20px;
+  border-top-left-radius: 20px;
+  border-bottom-right-radius: 20px;	
+}
+
+.node7 {
+  z-index: 100;
+  cursor: default;
+  display: block;
+  
+  background:yellow;
+  opacity:0.9;
+  color:white;
+  font: 30px/34px Arial, sans-serif;
+  font-size:1em;
+  text-align: center;
+  
+  padding:0 7px;
+  border: 2px solid blue;
+  -webkit-border-top-left-radius: 20px;
+  -webkit-border-bottom-right-radius: 20px;
+  -moz-border-radius-topleft: 20px;
+  -moz-border-radius-bottomright: 20px;
+  border-top-left-radius: 20px;
+  border-bottom-right-radius: 20px;	
+}
+
+
+
+
+.buzzmap .node a {
+  color:#08088A;
+}
+.buzzmap .node.active {
+  border-width:5px;
+  font-size:1.2em;
+}
+.buzzmap .node.active a {
+  color:#08088A;
+}
+.buzzmap .node.root {
+  padding:5px 10px;
+  font-size:2em;
+}

@@ -1,0 +1,186 @@
+#overview{
+	position: relative;
+	top: 51px;
+}
+    
+#banner img{
+	height: 90px;
+  	padding: 10px;
+}
+
+#advertisement {
+	margin-top: 45px;
+  	font-size: 30px;
+  	line-height: 20px;
+  	font-family: 'Telex', sans-sefif;
+  	font-weight: bold;
+    font-style: italic;
+  	color:#317eac;
+  	text-rendering: optimizelegibility;
+    text-align: right;
+}
+
+#buttononNavi{
+	height: 32px;
+	width: 32px;
+	margin-left: 18px;
+	margin-right: 24px;
+	margin-top:0px;
+	margin-bottom:0px;
+}
+
+.nav > li {
+	cursor: hand;
+}
+
+.treelistall {
+	list-style-type: none;
+	font: 16px Tahoma, Verdana, Arial, Helvetica, sans-serif;
+}
+/*
+.listlevel1block .listlevel2block {
+	display:inline:
+	height: 30px;
+	width: 100%;
+	padding:10px;
+	margin:5px;
+	border: 1px none;
+	font-weight: bold;
+	color:#0049ac;
+	line-height: 1.3em;
+}
+*/
+/*
+.listlevel1block:hover .listlevel2block:hover {
+	cursor: hand;
+	border: 1px dotted;
+}
+*/
+
+.treelistall li{
+	padding: 3px;
+	margin: 2px;
+	margin-right: 0px;
+	border: 3px none;
+	/*color:#0049ac;*/
+	/*line-height: 1.3em;*/
+	line-height: 20px;
+}
+
+.treelistall li:hover{
+	cursor: hand;
+	/*border: 1px dotted;*/
+	font-weight: bold;
+	background-color: #F5F5F5;
+}
+
+.listlevel1block > a:hover{
+	cursor: hand;
+	color: #0049ac;
+	/*background-color: #F5F5F5;*/
+}
+
+.listlevel1block > img:hover{
+	cursor: hand;
+}
+
+.smallbutton {
+	height: 18px;
+	width: 18px;
+	float: right;
+	padding-left: 2px; 
+	opacity: 0.5;
+}
+
+.smallbutton:hover {
+	opacity: 1.0;
+	cursor: pointer;
+}
+
+#currentlist {
+	background-color: #FFFF99;
+	/*background-color: #317eac;*/
+}
+
+#treeopen, #treeclosed {
+	padding-right: 2px;
+}
+
+.headingtype {
+	height: 18px;
+	width: 13px;
+	padding-left: 4px; 
+}
+/*
+.listcontentsignopen {
+	background-image:url('images/treeopen.gif');
+}
+
+.listcontenttext {
+	color: #0049ac;
+}
+*?
+
+/*
+.nav > li > a:hover,
+.nav > li > a:focus {
+  text-decoration: none;
+  background-color: #f5f5f5;
+}
+*/
+
+.buttonFuncion {
+	width:85px;
+}
+
+.buttonFuncion:hover {
+	cursor: pointer;
+}
+
+#contentareacancel {
+	width: 40px;
+	height: 100%;
+	/*background-color: #F5F5F5;*/
+	background-color: #FFFFFF;
+}
+
+#notecontent {
+	height:60%;
+	background-color: yellow;
+}
+
+#cancelchecked {
+	position: absolute;
+	top: 340px;
+	left: 0px;
+	width: 40px;
+	height: 40px;
+	background-color: #F1F1F1;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+}
+
+#cancelchecked_hover {
+	background-color: #E1E1E1;
+}
+
+#cancelcheckedtext {
+	position: absolute;
+	top: 320px;
+	left: -40px;
+	height: 20px;
+	width: 120px;
+	background-color: #FFE800;
+	visibility: hidden;
+	font-size: 12px;
+}
+
+#selecttype {
+	display: inline-block;
+	position: relative;
+	width: 120px;
+	height: 60px;
+	font-size: 10px;
+	margin-left: 30px;
+	vertical-align: top;
+}

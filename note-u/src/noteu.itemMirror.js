@@ -15,17 +15,21 @@
         var dropboxItemUtility,
             dropboxXooMLUtility,
             dropboxClient,
-            rootPath = "/DayWeaver Independent Studies/OurSpace/",
-            rootFolder = "OurSpace",
+            rootPath = "/",
+            rootFolder = "",
             rootItemMirror = "",
             namespaceURI = "http://noteU";
 
             // Create DropboxClient
             dropboxClient = new Dropbox.Client({
-                key: "PAQgA58iQUA=|AKSLjv/vu+ymSp0MFxcFnQzXeqJ5jsMTwvE6SMN69w==",
-                sandbox: false
+                //their key
+                //key: "OlKhSJqRp5A=|vhfGOT01XVUCkOl1+xepgh+Pwk/wzjQcrUReQUETpQ==",
+                //my key
+                key: "e87djjebo1o8vwe"
+                //sandbox: false
             });
-            dropboxClient.authDriver(new Dropbox.Drivers.Redirect({
+            
+            dropboxClient.authDriver(new Dropbox.AuthDriver.Redirect({
                 rememberUser: true
             }));
 
@@ -60,7 +64,7 @@
             //store in Map
             if (MapItemMirror.hasOwnProperty(GUID)) {
                 var itemMirror = MapItemMirror[GUID];
-                itemMirror.sync(function (error){
+                itemMirror.refresh(function (error){
                     if (error) { throw error};
                     delete MapItemMirror[GUID];
                     MapItemMirror[GUID] = itemMirror;
@@ -74,8 +78,8 @@
         /* loading all itemMirror*/
         function initialItemMirror(dirpath, callback){
             //create an ItemMirror
-            var itemMirrorOptions = { 
-                groupingItemURI: dirpath, 
+            var itemMirrorOptions = {
+                groupingItemURI: dirpath,
                 xooMLDriver: dropboxXooMLUtility,
                 itemDriver: dropboxItemUtility,
                 syncDriver: {
@@ -92,7 +96,7 @@
                             //refreshLoop(itemMirrorCase, function (itemMirror){
                                 //return callback(error, itemMirror); //itemMirror
                             //});
-                            callback(error, itemMirrorCase); 
+                            callback(error, itemMirrorCase);
                         };
                         callback(error, itemMirrorCase);
                     });
@@ -101,13 +105,11 @@
         }
         /* create itemMirror from grouping item association*/
         function createItemMirror(itemMirrorCase, GUID, callback){
-            itemMirrorCase.createItemMirrorForAssociatedGroupingItem( GUID,  function (error, newitemMirrorCase ) {
-                if (error) { throw error};
-                //newitemMirrorCase.sync(function (error){
-                    return callback(newitemMirrorCase);
-                //});
+            itemMirrorCase.createItemMirrorForAssociatedGroupingItem( GUID , function (error, ItemMirror){
+                return callback(ItemMirror);
             });
         }
+        
         /*get username from dropbox client*/
         function getUserName(callback){
             dropboxClient.authenticate(function (error, client) {
@@ -130,38 +132,24 @@
             var _GUID = GUIDs[index];
 
             var _displayText = "";
-            itemMirrorCase.getAssociationDisplayText( _GUID,  function (error , displayText) {
-                if(error) { console.log('1: '+ error); throw error; }
-                _displayText = displayText;
-            });
+            _displayText = itemMirrorCase.getAssociationDisplayText( _GUID );
 
             var _dueDate = "";
-            itemMirrorCase.getAssociationNamespaceAttribute("dueDate", _GUID, namespaceURI, function (error, namespacedata){
-                if(error) { console.log('2: '+ error); throw error; }
-                _dueDate = namespacedata;
-            });
+            _dueDate = itemMirrorCase.getAssociationNamespaceAttribute("dueDate", _GUID, namespaceURI);
 
             var _doORac = "";
-            itemMirrorCase.getAssociationNamespaceAttribute("doORac", _GUID, namespaceURI, function (error, namespacedata){
-                if(error) { console.log('3: '+ error); throw error; }
-                _doORac = namespacedata;
-            });
+            _doORac = itemMirrorCase.getAssociationNamespaceAttribute("doORac", _GUID, namespaceURI);
 
             var _localItem = "";
-            itemMirrorCase.getAssociationLocalItem( _GUID,  function (error, localItem) {
-                if (error) { console.log('4: '+ error); throw error};
-                _localItem = localItem;
-            });
+            _localItem = itemMirrorCase.getAssociationLocalItem( _GUID );
 
             var _associationItem = "";
             checkisGrouping(itemMirrorCase, GUIDs[index], function (flag) {
                 if (flag == false) {
                     if ( _localItem == '') {
-                        
-                        itemMirrorCase.getAssociationAssociatedItem(GUIDs[index],  function (error , associationItem){
-                            if (error) { throw error};
-                            
-                             _associationItem = associationItem;
+
+                        _associationItem = itemMirrorCase.getAssociationAssociatedItem(GUIDs[index]);
+                             
                             if (associationItem == '' || typeof associationItem === "undefined") {
                                 //fake txt
                                 uiTaskAssembly( _GUID, _displayText, _dueDate, _doORac, '', '');
@@ -170,8 +158,7 @@
                                 uiTaskAssembly( _GUID, _displayText, _dueDate, _doORac, _associationItem, "url");
                             };
                             uichangecolor(color);
-                        });
-                        
+
                     }else{
                         var fileStr = _localItem.split('.');
                         var fileType = fileStr[fileStr.length-1];
@@ -197,7 +184,7 @@
 
                     uiTaskAssembly( _GUID, _displayText, _dueDate, _doORac, '', 'folder');
                     uichangecolor(color);
-                    
+
                     loopTask(GUIDs, index += 1, itemMirrorCase, color, path, callback);
                 }
             });
@@ -205,37 +192,35 @@
         /*load checklist information*/
         function loadTask(title, GUID, color, path){
             if (GUID == null || typeof GUID === undefined || GUID == '') {
-                rootItemMirror.listAssociations(function (error, GUIDs){
-                    uiRemove();
-                    uiChecklistAssembly(GUID, title);
-                    uichangecolor(color);
-                    $("#paper").show();
-                    if(GUIDs.length == 0){
+                var GUIDs = rootItemMirror.listAssociations();
+                uiRemove();
+                uiChecklistAssembly(GUID, title);
+                uichangecolor(color);
+                $("#paper").show();
+                if(GUIDs.length == 0){
+                    //$("#paper").show();
+                }else{
+                    loopTask(GUIDs, 0 , rootItemMirror, color, path, function(){
                         //$("#paper").show();
-                    }else{
-                        loopTask(GUIDs, 0 , rootItemMirror, color, path, function(){
-                            //$("#paper").show();
-                        });
-                    };
-                });
+                    });
+                };
             }else{
                 getItemMirror( GUID, function (itemMirrorCase){
                     createItemMirror(itemMirrorCase, GUID, function ( newitemMirrorCase){
-                        newitemMirrorCase.listAssociations(function (error, GUIDs){
-                            uiRemove();
-                            uiChecklistAssembly(GUID, title);
-                            uichangecolor(color);
-                            $("#paper").show();
-                            if(GUIDs.length == 0){
+                        var GUIDs = newitemMirrorCase.listAssociations();
+                        uiRemove();
+                        uiChecklistAssembly(GUID, title);
+                        uichangecolor(color);
+                        $("#paper").show();
+                        if(GUIDs.length == 0){
+                            //$("#paper").show();
+                        }else{
+                            loopTask(GUIDs, 0 , newitemMirrorCase, color, path, function(){
                                 //$("#paper").show();
-                            }else{
-                                loopTask(GUIDs, 0 , newitemMirrorCase, color, path, function(){
-                                    //$("#paper").show();
-                                });
-                            };
-                        });
+                            });
+                        };
                     });
-                });  
+                });
             };
         }
         /* get file.url from Dropbox website*/
@@ -277,32 +262,24 @@
         }
         /* check is grouping item or not*/
         function checkisGrouping(itemMirrorCase, GUID, callback){
-            itemMirrorCase.isAssociatedItemGrouping( GUID, function (error, isGroupingItem) {
-                if(error) { console.log(error); return callback(false); }//throw error; 
-                return callback(isGroupingItem);
-            });
+            return callback(itemMirrorCase.isAssociationAssociatedItemGrouping( GUID ));
         }
         /* get localItem from association*/
         //callback(localItem)
         function getLocalItem(itemMirrorCase, GUID, callback){
-            itemMirrorCase.getAssociationLocalItem( GUID,  function (error, localItem) {
-                if (error) { throw error};
-                return callback(localItem);
-            });
+            return callback(itemMirrorCase.getAssociationLocalItem( GUID ));
         }
         /* get association attr*/
         function getAssociationAttr(itemMirrorCase, attrName, GUID, callback){
-            itemMirrorCase.getAssociationNamespaceAttribute(attrName, GUID, namespaceURI, function (error, attrValue ) {
-                //console.log('get association error: ' + error);
-                if(error) { throw error; }
-                callback(attrValue);
-            });
+            callback(itemMirrorCase.getAssociationNamespaceAttribute(attrName, GUID, namespaceURI));
         }
         /* set association attr*/
         function setAssociationAttr(itemMirrorCase, attrName, attrValue, GUID){
-            itemMirrorCase.setAssociationNamespaceAttribute(attrName, attrValue.toString() , GUID, namespaceURI, function (error){
-                //console.log('set association error: ' + error);
-                if (error) {throw error; };
+            itemMirrorCase.setAssociationNamespaceAttribute(attrName, attrValue.toString() , GUID, namespaceURI);
+            itemMirrorCase.save(function(error){
+                if (error) {
+                    console.log('Encountered an error while saving');
+                }
             });
         }
         /* set attr into association*/
@@ -310,16 +287,16 @@
             getItemMirror(parentGUID, function (itemMirrorCase){
                 switch(level){
                     case ("association"):
-                        setAssociationAttr(itemMirrorCase, attrName, attrValue, parentGUID); 
+                        setAssociationAttr(itemMirrorCase, attrName, attrValue, parentGUID);
                         break;
                     case ("next"):
-                        createItemMirror(itemMirrorCase, parentGUID, function (newitemMirrorCase) {
+                        if (itemMirrorCase != undefined) {
+                            createItemMirror(itemMirrorCase, parentGUID, function (newitemMirrorCase) {
                             setAssociationAttr(newitemMirrorCase, attrName, attrValue, GUID);
                         });
+                        }
                     case ("fragement"):
-                        rootItemMirror.setFragmentNamespaceAttribute(attrName, attrValue, namespaceURI, function ( error ){
-                            if (error) { throw error};
-                        });
+                        rootItemMirror.setFragmentNamespaceAttribute(attrName, attrValue, namespaceURI);
                     default:
                         break;
                 }
@@ -334,10 +311,15 @@
                     }, function (error, newGUID) {
                         uiTaskAssembly(newGUID, inputtext, dueDate, "true", '', '');
                         uichangecolor(color);
-                        
+
                         //set association name space data
                         setAssociationAttr(newitemMirrorCase, "dueDate", dueDate.toString(), newGUID);
                         setAssociationAttr(newitemMirrorCase, "doORac", doORac.toString(), newGUID);
+                        newitemMirrorCase.save(function(error){
+                            if (error) {
+                                console.log('error');
+                            }
+                        })
                     });
                  });
             });
@@ -364,10 +346,10 @@
                 //set AossociationNameSpaceAttribute, checklist color, create date
                 setAssociationAttr(itemMirrorCase, "color", "rgb(58, 110, 165)", GUID);
                 setAssociationAttr(itemMirrorCase, "createDate", getCurrentdate().toString(), GUID);
-                
+
                 //new checklist on webpage
                 uiRemove();
-                uiChecklistAssembly(GUID, inputtext); 
+                uiChecklistAssembly(GUID, inputtext);
                 uichangecolor("rgb(58, 110, 165)");
 
                 MapItemMirror[GUID] = itemMirrorCase;
@@ -410,7 +392,7 @@
         }
         /* translate color */
         function colorTranslate(color){
-             
+
             var colorClass = "blue";
 
             switch(color){
@@ -474,7 +456,7 @@
                     .addClass(olClass)
                 );
             }else{
-                $('#' + parentTag).prepend($('<ol></ol>')
+                $('#' + parentTag).append($('<ol></ol>')
                     .attr({
                         id: GUID,
                         title: dirname
@@ -525,15 +507,15 @@
 
             $('article').css('background-color',color);
             $('li.task').css('background-color',color);
-            $('.line').css('background-color',color);   
-        
+            $('.line').css('background-color',color);
+
             var rgb = getRGB(color);
             for(var i = 0; i < rgb.length; i++){
-                rgb[i] = Math.max(0, rgb[i] - 190);    
+                rgb[i] = Math.max(0, rgb[i] - 190);
             }
-            
+
             var newColor = 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
-            
+
             var rgbHover = getRGB(color);
             for(var i = 0; i < rgbHover.length; i++){
                 rgbHover[i] = Math.max(0, rgbHover[i] - 10);
@@ -551,7 +533,7 @@
         /*<!--change color function-->*/
         function getRGB(color) {
             var result;
-            
+
             // Look for rgb(num,num,num)
             if (result = /rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/.exec(color)) return [parseInt(result[1]), parseInt(result[2]), parseInt(result[3])];
 
@@ -640,12 +622,12 @@
 
             if (type != '') {
                 $('#' + GUID + '.task').children('.task-name').html('');
-                
+
                 if (type == "file") {
                     var fileArray = inputtext.split('.');
                     var fileType = fileArray[fileArray.length-1];
                     var txtArray = ["ade", "cdr", "igs", "pdf", "ppt", "pptx", "wri", "xls", "xlxs", "zip", "mp3", "wav", "txt", "doc", "docx", "txt"];
-                    var picArray = ["jpg", "bmp", "dib", "jpg", "jpeg", "jpe", "jfif", "gif", "tif", "tiff", "png", "ico"]; 
+                    var picArray = ["jpg", "bmp", "dib", "jpg", "jpeg", "jpe", "jfif", "gif", "tif", "tiff", "png", "ico"];
                     //var loopArray = [txtArray, picArray];
 
                     $.each(txtArray, function (index, value){
@@ -653,7 +635,7 @@
                             type = "txt";
                         };
                     });
-                    
+
                     $.each(picArray, function (index, value){
                         if (fileType == value) {
                             type = "pic";
@@ -663,7 +645,7 @@
                     if (type != "txt" && type != "pic") {
                         type = "unknown";
                     };
-                   
+
                 };
 
                 $('#' + GUID + '.task').children('.task-name').append($('<a></a>')
@@ -684,7 +666,7 @@
                 if (type == "folder") {
                     $('#' + GUID + '.task').children('.task-name').children('a').removeAttr("target").removeAttr('href');
                 };
-            };      
+            };
         }
         function createRootItemMirror(dirpath, callback){
             initialItemMirror(dirpath, function (error, itemMirrorCase){
@@ -711,7 +693,10 @@
                         getAssociationAttr(itemMirrorCase, "color", GUIDs[index], function ( _color ) {
                             createItemMirror(itemMirrorCase, GUIDs[index], function (newitemMirrorCase){
                                 uiDirAssembly(GUIDs[index], localItem, abbrname, _color, parentGUID);
-                                loadFolders(newitemMirrorCase, GUIDs[index]);
+                                if (newitemMirrorCase != undefined) {
+                                    loadFolders(newitemMirrorCase, GUIDs[index]);
+                                }
+                                
                                 loopFolder(GUIDs, index += 1, parentGUID, itemMirrorCase, callback);
                             });
                         });
@@ -722,13 +707,11 @@
             });
         }
         function loadFolders(itemMirrorCase, parentGUID){
-            itemMirrorCase.listAssociations(function (error, GUIDs) {
-                if (error) { throw error};
-                loopFolder(GUIDs, 0, parentGUID, itemMirrorCase, function () {
-                    //the loop has finished for all elements
-                });
+            console.log(itemMirrorCase);
+            var GUIDs = itemMirrorCase.listAssociations();
+            loopFolder(GUIDs, 0, parentGUID, itemMirrorCase, function () {
+                //the loop has finished for all elements
             });
-        
         }
         function reloadFolders(GUID, callback){
             var itemMirrorCase = MapItemMirror[GUID];
@@ -739,19 +722,16 @@
             });
         }
         function loadDefaultTask(){
-            rootItemMirror.sync(function (error){
-                rootItemMirror.getFragmentNamespaceAttribute ("color", namespaceURI, function (error, _color){
-                    if (error) { throw error };
-                    if ( _color == null || typeof _color === "undefined") {
-                        _color = "rgb(58, 110, 165)"
-                        rootItemMirror.setFragmentNamespaceAttribute("color", _color, namespaceURI, function (error){
-                            if (error) { throw error};
-                            loadTask(rootFolder, '', _color, rootPath);
-                        });
-                    }else{
-                        loadTask(rootFolder, '', _color, rootPath);
-                    };
-                });
+            rootItemMirror.refresh(function (error){
+                var _color = rootItemMirror.getFragmentNamespaceAttribute ("color", namespaceURI);
+                if (error) { throw error };
+                if ( _color == null || typeof _color === "undefined") {
+                    _color = "rgb(58, 110, 165)"
+                    rootItemMirror.setFragmentNamespaceAttribute("color", _color, namespaceURI);
+                    loadTask(rootFolder, '', _color, rootPath);
+                }else{
+                    loadTask(rootFolder, '', _color, rootPath);
+                };
             });
         }
 
@@ -783,7 +763,7 @@
     /* page load*/
     function WindowLoad(){
         $("#paper").hide();
-        
+
         //get ueser info
         fn.getUserName(function (username, useremail) {
           $('#username').html(username);
@@ -882,12 +862,12 @@
                         fn.loadTask(title, parentGUID, color, fn.rootPath + path);
                     });
                  };
-            };            
+            };
         });
         /*<!--delete task-->*/
         $('body').delegate('.task-delete-button', 'click', function() {
             var flag = $(this).parent('span').prev('.task-name').children('a').children('div').hasClass('folder');
-            
+
             parentGUID = $('.click').attr('id');
             GUID = $(this).parents("li").attr('id');
 
@@ -917,7 +897,7 @@
                 color = $('article').css('background-color');
                 fn.createTask( $('.click').attr('id'), $('#new-task-name').val(), $('#datepicker').val(), true, color);
                 $('#new-task-name').val("");
-                $('#datepicker').val(""); 
+                $('#datepicker').val("");
             } else{
                 alertMsg('Notice' , 'Please type in your task!', true, '');
             };
@@ -968,14 +948,14 @@
                                     //console.log(GUID);
                                     //console.log($('.click').attr('id'));
                                     $('#' + GUID).children("li").css("background-color","rgb(0, 0, 102");
-                                    
+
                                 }else {
                                     alertMsg('Notice' , 'This checklist is existed, please try again!', true, '');
                                 }
                             });
                         };
 
-                        return false;     
+                        return false;
                     });
                 }
             });
@@ -989,7 +969,7 @@
         $('body').delegate('.task-done-button','click', function(){
             parentGUID = $('.click').attr('id');
             GUID = $(this).closest('li').attr('id');
-            
+
             $(this).toggleClass('hidden');
             var prev= $(this).prev();
             $(prev).toggleClass('hidden');
@@ -999,7 +979,7 @@
             fn.setAttributeValue(parentGUID, "doORac", "false", "next", GUID);
         });
         /*<!--done to active-->*/
-        $('body').delegate('.task-active-button','click',function(){ 
+        $('body').delegate('.task-active-button','click',function(){
             parentGUID = $('.click').attr('id');
             GUID = $(this).closest('li').attr('id');
 
@@ -1008,7 +988,7 @@
             $(next).toggleClass('hidden');
             var c=$(this).parents("li");
             $("#active").prepend(c);
-          
+
             fn.setAttributeValue(parentGUID, "doORac", "true", "next", GUID);
         });
         /*<!--load checklist-->*/
@@ -1067,7 +1047,7 @@
         });
         /*--edit title--*/
         $('body').delegate('.click', 'click', function () {
-            $('.click').editable( function (value, settings) { 
+            $('.click').editable( function (value, settings) {
                 console.log(this);
                 console.log(value);
                 console.log(settings);
@@ -1091,7 +1071,7 @@
                     //load task
                     $('#' + GUID).children("li").css("background-color","rgb(0, 0, 102)");
                     $('#' + parentGUID).children("li").css("background-color","#47A3DA");
-                    
+
                     fn.loadTask(title, GUID, color, fn.rootPath + path);
                 });
             };
@@ -1116,7 +1096,7 @@
                 var oldcolorclass = fn.colorTranslate(oldcolor);
                 $('#' + GUID).children('li').children('.task_color').removeClass(oldcolorclass);
                 $('#' + GUID).children('li').children('.task_color').addClass(colorClass);
-            };   
+            };
         });
         /*<!--Task Panel Button--!>*/
         $('body').delegate('#arrow', 'click', function(){

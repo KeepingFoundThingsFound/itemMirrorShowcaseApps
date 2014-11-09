@@ -24,7 +24,7 @@ h3{font-weight:normal; font-size:14px;}
 .sucai{position:absolute;z-index:2; margin:150px 0 0 360px;}
 .sucai img{width:100px;height:620px;}
 .noteb{font-size:16px; color:#000;list-style:none;width:180px;}
-.noteb a{text-decoration:none;display:block;width:180px;color:#FFF;padding-left:3px;font-family:Verdana, Geneva, sans-serif; height:30px;line-height:30px;margin:10px 0 10px 0;}
+.noteb a{text-decoration:none;display:block;width:180px;color:#FFF;padding-left:3px;font-family:Verdana, Geneva, sans-serif; height:30px;line-height:30px;margin:10px 0 10px 0;white-space: nowrap;}
 .noteb a:link,.noteb a:visited{color:#000;}
 .noteb a:hover{
 	     color:#60F;

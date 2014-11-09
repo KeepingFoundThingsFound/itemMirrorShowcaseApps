@@ -28,14 +28,17 @@ var
     
 
     dropboxClientCredentials = {
-      key: "cyN5MgnUD1A=|xqE7O1oaohmU0XRwOAo6iQ+4enIeiiMCIJkmqD30oA==",
+      //their key
+      //key: "cyN5MgnUD1A=|xqE7O1oaohmU0XRwOAo6iQ+4enIeiiMCIJkmqD30oA==",
+      // my key
+      key: "e87djjebo1o8vwe",
       sandbox: true
     };
 
 
-    dropboxAuthDriver = new Dropbox.Drivers.Redirect({
-      rememberUser: true
-    });
+    dropboxAuthDriver = new Dropbox.AuthDriver.Redirect({
+                rememberUser: true
+            });
 
     dropboxClient = new Dropbox.Client(dropboxClientCredentials);
     dropboxClient.authDriver(dropboxAuthDriver);
@@ -212,7 +215,7 @@ html5sticky.getIdentifier = function(el){
 		  console.log('this is webpage');
 	  }
 	  if($(el).closest('.box').find(".save").hasClass("save")){
-            deleteSubfolder(guid, tempParent);
+            deleteAssociationforNote(guid, tempParent);
 
 		  console.log('this is note');
 	  }
@@ -313,10 +316,12 @@ html5sticky.addBoard = function(el){
        if(error){
           throw error;
         }
-        iM.setAssociationDisplayText(guid, updatedContent, function(error){
-          if(error){throw error;}
-        });
-
+        iM.setAssociationDisplayText(guid, updatedContent);
+	iM.save(function(error){
+	    if (error) {
+		console.log("saving has encountered an error");
+	    }
+	})
      });
    }
 
@@ -382,6 +387,10 @@ html5sticky.addBoard = function(el){
        if(error){throw error;}
        iM.deleteAssociation(guid, function(error){
         if(error){throw error;}
+	iM.save(function(error){
+		if(error){throw error;}
+		 console.log("I am syncing");
+	   });
         console.log(guid);
         console.log("the parent foldername is" + parentFoldName);
       });
@@ -394,21 +403,23 @@ html5sticky.addBoard = function(el){
     var deleteFolder_itemMirrorOption =  setItemMirrorOption("/", 1);
     new ItemMirror(deleteFolder_itemMirrorOption, function(error, deleteFolder_itemMirror){
       if(error){throw error;}
-      deleteFolder_itemMirror.listAssociations(function(error, guids){
+      var guids = deleteFolder_itemMirror.listAssociations();
         for(var i = 0; i < guids.length; i++){
-          deleteFolder_itemMirror.getAssociationDisplayText(guids[i], function(error, displayText){
+          var displayText = deleteFolder_itemMirror.getAssociationDisplayText(guids[i]);
             if(error){throw error;}
             if(displayText == foldName){
               // confirm("Are you sure you want to remove this board? The corresponding folder in 
               //   your dropbox app folder will also be removed!");
               deleteFolder_itemMirror.deleteAssociation(guids[i], function(error){
                 if(error) {throw error;}
-                console.log("the folder whose name is "+ displayText +" is deleted!");
+              	      iM.save(function(error){
+		if(error){throw error;}
+		 console.log("I am syncing");
+	   });
+	        console.log("the folder whose name is "+ displayText +" is deleted!");
               });
             }
-          });
         }
-      });
     });
 
   }
@@ -416,13 +427,14 @@ html5sticky.addBoard = function(el){
   function deleteAssociationforNote(guid, folderName){
      var inneritemMirrorOptionforNoteAss = setItemMirrorOption(folderName, 3);
      new ItemMirror(inneritemMirrorOptionforNoteAss, function(error, iM){
+      if(error){console.log(error)}
       iM.deleteAssociation(guid, function(error){
         if(error){throw error;}
+	      iM.save(function(error){
+		if(error){throw error;}
+		 console.log("I am syncing");
+	   });
       });
-      // inneritemMirrorOptionforNoteAss.sync(function(error){
-      //      if(error){throw error;}
-      //       console.log("I am syncing");
-      // });
       
      });
   }
@@ -439,7 +451,7 @@ html5sticky.addBoard = function(el){
         new ItemMirror(eachNoteItemMirrorOption, function(error, savedNoteinEachFolder){
           if (error) { throw error; }
         
-         savedNoteinEachFolder.listAssociations(function(error,guids){
+         var guids = savedNoteinEachFolder.listAssociations();
              for(var i=0; i < guids.length; i++){
                 //global variable stores the guids
                  arrayforGUIDS.push(guids[i]);
@@ -447,7 +459,7 @@ html5sticky.addBoard = function(el){
                  //this board's array(local variable stores the guids)
                  arrayGUIDForEachBoard.push(guids[i]);
 
-                 savedNoteinEachFolder.getAssociationDisplayText(guids[i], function (error, displayText) {
+                 var displayText = savedNoteinEachFolder.getAssociationDisplayText(guids[i]);
                   if (error) {
                     throw error;
                   }
@@ -505,7 +517,6 @@ html5sticky.addBoard = function(el){
                       //下面这几行 应该和上面的融入到一起；
 					
 					  }
-                });
              }
              
         //      for(var j=0; j< eachBoardText.length; j++){           
@@ -521,17 +532,13 @@ html5sticky.addBoard = function(el){
         	      	
         //          }
                  
-              });
     });
   };
 
  function getGuidAddingIcon(guid, iM, callback){
      // var noteType;
         // var flag;
-      iM.isAssociatedItemGrouping(guid, function(error, isGroupingItem){
-          if (error) {
-              throw error;
-          }
+      var isGroupingItem = iM.isAssociationAssociatedItemGrouping(guid);
           
           if (isGroupingItem) {
               callback(isGroupingItem, guid);             
@@ -539,18 +546,13 @@ html5sticky.addBoard = function(el){
           else {
               callback(isGroupingItem, guid);
           }
-      });
   }
 
 function storeRelationShip(guid, iM, parent, callback){
-  iM.isAssociatedItemGrouping(guid, function(error, isGroupingItem){
-          if (error) {
-                  throw error;
-          }
+  var isGroupingItem = iM.isAssociationAssociatedItemGrouping(guid);
           
           if (isGroupingItem) {
-              iM.getAssociationDisplayText(guid, function(error, subdisplayText){
-                if(error){throw error;}
+              var subdisplayText = iM.getAssociationDisplayText(guid);
                 // var value = parent+":"+subdisplayText;
                 // console.log(value);
                 // relationship.push(value);
@@ -558,13 +560,11 @@ function storeRelationShip(guid, iM, parent, callback){
                 childArray.push(subdisplayText);
                 callback(subdisplayText);  
 
-              });
           }
           else {
               console.log("parentArray: "+ parent);
               parentArray.push(parent);
           }
-      });
 }
 
      var parentArray = new Array();
@@ -577,13 +577,10 @@ function storeRelationShip(guid, iM, parent, callback){
      new ItemMirror(folderSaved_itemMirrorOption, function(error, savedFolder_itemMirror){
           if (error) { throw error; }
           //first level folder "/"
-          savedFolder_itemMirror.listAssociations(function(error,guids){
+          var guids = savedFolder_itemMirror.listAssociations();
             // console.log("guids length: "+ guids.length);
              for(var i=0; i<guids.length; i++){
-                 savedFolder_itemMirror.getAssociationDisplayText(guids[i], function (error, displayText) {
-                  if (error) {
-                    throw error;
-                  }
+                 var displayText = savedFolder_itemMirror.getAssociationDisplayText(guids[i]);
                   if(displayText != ''){
                         var value;
                         var sub_itemMirrorOption = setItemMirrorOption(displayText, 3);
@@ -592,7 +589,7 @@ function storeRelationShip(guid, iM, parent, callback){
                         
                         new ItemMirror(sub_itemMirrorOption, function(error, iM){
                            if (error) { throw error; }  
-                           iM.listAssociations(function(error,subGuids){
+                           var subGuids = iM.listAssociations();
                             console.log("sub guids length: "+ subGuids.length);
                             if(subGuids.length == 0){
                               parentArray.push(displayText);
@@ -638,13 +635,10 @@ function storeRelationShip(guid, iM, parent, callback){
         
 
                            });
-
-                        });
                    
 
                     savedNoteBoardText.push(displayText);
                   }
-                });
              }
              //!!!!!!
             for(var j=0; j< savedNoteBoardText.length; j++){           
@@ -658,9 +652,6 @@ function storeRelationShip(guid, iM, parent, callback){
 
         
           });
-
-
-    });
 
 }
 
